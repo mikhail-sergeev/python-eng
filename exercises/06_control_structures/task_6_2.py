@@ -12,3 +12,17 @@
 
 Ограничение: Все задания надо выполнять используя только пройденные темы.
 """
+
+addr = input("Please enter IP: ")
+oct1 = int(addr.split(".")[0])
+
+if 0 < oct1 <= 223:
+    print("unicast")
+elif 0 < oct1 <= 239:
+    print("multicast")
+elif addr=="255.255.255.255":
+    print("local broadcast")
+elif addr=="0.0.0.0":
+    print("unassigned")
+else:
+    print("unused")
