@@ -39,3 +39,13 @@ interface Ethernet0/3
 ...
 
 """
+
+from sys import argv
+conf = argv[1]
+with open(conf) as f:
+    c = f.read().rstrip().split('\n')
+    for line in c:
+        if line[0] != "!":
+            print(line)
+
+

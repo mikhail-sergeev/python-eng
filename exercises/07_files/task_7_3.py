@@ -20,3 +20,17 @@
 Ограничение: Все задания надо выполнять используя только пройденные темы.
 
 """
+
+
+result = {}
+
+with open('CAM_table.txt') as f:
+    for line in f:
+        line = line.split()
+        try:
+            vlan, mac, tp, port, *other = line
+            if vlan[0].isdigit():
+                print("{:10} {:20} {:10}".format(vlan, mac, port))
+        except ValueError:
+            pass
+

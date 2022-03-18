@@ -16,4 +16,19 @@
 
 """
 
+from sys import argv
+
 ignore = ["duplex", "alias", "configuration"]
+conf = argv[1]
+conf_new = argv[2]
+
+with open(conf) as f, open(conf_new, 'w') as f2:
+    c = f.read().rstrip().split('\n')
+    for line in c:
+        if line[0] != "!":
+            ign = False
+            for i in ignore:
+                if i in line:
+                    ign = True
+            if not ign:
+                f2.write(line+"\n")

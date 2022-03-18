@@ -17,3 +17,24 @@ Enter VLAN number: 10
 Ограничение: Все задания надо выполнять используя только пройденные темы.
 
 """
+
+import operator
+
+vl_input = input("Vlan: ")
+result = []
+
+with open('CAM_table.txt') as f:
+    for line in f:
+        line = line.split()
+        try:
+            vlan, mac, tp, port, *other = line
+            if vlan[0].isdigit() and vlan == vl_input:
+                result.append({'vlan': int(vlan), 'mac': mac, 'port': port})
+        except ValueError:
+            pass
+
+result.sort(key=operator.itemgetter('mac'))
+result.sort(key=operator.itemgetter('vlan'))
+
+for data in result:
+    print("{:<10} {:20} {:10}".format(data['vlan'], data['mac'], data['port']))
