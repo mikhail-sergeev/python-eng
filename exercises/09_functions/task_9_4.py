@@ -64,3 +64,27 @@ def ignore_command(command, ignore):
         if word in command:
             ignore_status = True
     return ignore_status
+
+
+def convert_config_to_dict(config_filename):
+    result = {}
+    topline = ""
+    incline = []
+    with open(config_filename) as f:
+        for line in f:
+            if "!" in line or line.strip() == "" or ignore_command(line, ignore):
+                continue
+            if not (line and line[0] == ' '):
+                # saving
+                if not topline == "":
+                    result[topline] = incline
+                # new data
+                topline = line.strip()
+                incline = []
+            else:
+                incline.append(line.strip())
+            result[topline] = incline
+    return result
+
+print(convert_config_to_dict("config_sw1.txt"))
+
