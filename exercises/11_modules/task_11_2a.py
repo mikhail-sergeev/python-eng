@@ -73,6 +73,8 @@
 Ограничение: Все задания надо выполнять используя только пройденные темы.
 
 """
+from task_11_1 import parse_cdp_neighbors
+from draw_network_graph import draw_topology
 
 infiles = [
     "sh_cdp_n_sw1.txt",
@@ -80,3 +82,26 @@ infiles = [
     "sh_cdp_n_r2.txt",
     "sh_cdp_n_r3.txt",
 ]
+
+def create_network_map(filenames):
+    result = {}
+    for file in filenames:
+        with open(file) as f:
+            result.update(parse_cdp_neighbors(f.read()))
+    return unique_network_map(result)
+
+def unique_network_map(topology_dict):
+    result = {}
+    for port1,port2 in topology_dict.items():
+        if not result.get(port2) and not result.get(port1):
+            result[port1] = port2
+    return result
+
+
+if __name__ == "__main__":
+    links = create_network_map(infiles)
+    print(links)
+    draw_topology(links)
+
+
+
