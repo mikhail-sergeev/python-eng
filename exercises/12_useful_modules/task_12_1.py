@@ -17,3 +17,23 @@ IP-адрес считается доступным, если выполнени
 
 Ограничение: Все задания надо выполнять используя только пройденные темы.
 """
+import subprocess
+
+def ping_ip_addresses(ip_list):
+    ip_avail = []
+    ip_unavail = []
+    for ip in ip_list:
+        reply = subprocess.run(['ping', '-c', '3', '-n', ip],
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               encoding='utf-8')
+        if reply.returncode == 0:
+            ip_avail.append(ip)
+        else:
+            ip_unavail.append(ip)
+    return ip_avail, ip_unavail
+
+
+
+if __name__ == "__main__":
+    print(ping_ip_addresses(['8.8.8.8', '1.12.3.4']))

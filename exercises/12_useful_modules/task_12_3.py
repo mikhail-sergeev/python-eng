@@ -18,3 +18,11 @@ Reachable    Unreachable
              10.1.1.9
 
 """
+from tabulate import tabulate
+
+def print_ip_table(iplist1, iplist2):
+    ips = {"Reachable": iplist1, "Unreachable": iplist2}
+    print(tabulate(ips, headers="keys"))
+
+if __name__ == "__main__":
+    print_ip_table(['8.8.8.8'], ['1.12.3.4'])
