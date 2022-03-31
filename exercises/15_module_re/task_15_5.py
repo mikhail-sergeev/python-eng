@@ -26,3 +26,19 @@ description Connected to SW1 port Eth 0/1
 
 Проверить работу функции на файле sh_cdp_n_sw1.txt.
 """
+import re
+
+regex = r'(?P<DeviceID>\S+) +(?P<LocIF>\S+ \S+) +(?P<Hold>\d+) +(?P<Capability>[\S ]+) +(?P<Platform>\S+) +(?P<RemoteIF>\S+ \S+)'
+
+def generate_description_from_cdp(filename):
+    result = {}
+    with open(filename) as f:
+        for line in f:
+            match = re.search(regex,line)
+            if match:
+                dict = match.groupdict()
+                result[dict['LocIF']] = f"description Connected to {dict['DeviceID']} port {dict['RemoteIF']}"
+    return result
+
+if __name__ == "__main__":
+    print(generate_description_from_cdp("sh_cdp_n_sw1.txt"))

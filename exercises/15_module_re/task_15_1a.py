@@ -24,3 +24,19 @@
 а не ввод пользователя.
 
 """
+import re
+
+regex = (r'interface (\S+)[^!]+?ip address (\S+) (\S+)')
+
+
+def get_ip_from_cfg(filename):
+    with open(filename) as f:
+        result = re.findall(regex, f.read(), re.DOTALL)
+    result2 = {}
+    for r in result:
+        result2[r[0]] = (r[1],r[2])
+    return result2
+
+
+if __name__ == "__main__":
+    print(get_ip_from_cfg("config_r1.txt"))
