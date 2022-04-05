@@ -24,3 +24,30 @@ R6           Fa 0/2          143           R S I           2811       Fa 0/0
 
 Проверить работу функции на содержимом файла sh_cdp_n_sw1.txt
 """
+from pprint import pprint
+
+
+def parse_sh_cdp_neighbors(command_output):
+    result = {}
+    device = ""
+    stage = 0
+    for line in command_output.split("\n"):
+        if ">" in line and stage == 0:
+            device = line.split(">")[0]
+            stage = 1
+            continue
+        if "Device" in line and stage == 1:
+            stage = 2
+            continue
+        if stage == 2 and line.strip():
+            router,int1,int2,ttl,*other = line.split()
+            *other,model,int3,int4 = line.split()
+            inp = f"{int1} {int2}"
+            outp = {router: f"{int3} {int4}"}
+            result[inp] = outp
+    return {device: result}
+
+
+if __name__ == "__main__":
+    with open("sh_cdp_n_sw1.txt") as f:
+        pprint(parse_sh_cdp_neighbors(f.read()))

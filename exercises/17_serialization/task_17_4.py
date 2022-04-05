@@ -40,8 +40,9 @@ C-3PO,c3po@gmail.com,16/12/2019 17:24
 Функции convert_str_to_datetime и convert_datetime_to_str использовать не обязательно.
 
 """
-
+import csv
 import datetime
+from pprint import pprint
 
 
 def convert_str_to_datetime(datetime_str):
@@ -56,3 +57,40 @@ def convert_datetime_to_str(datetime_obj):
     Конвертирует строку с датой в формате 11/10/2019 14:05 в объект datetime.
     """
     return datetime.datetime.strftime(datetime_obj, "%d/%m/%Y %H:%M")
+
+
+def write_last_log_to_csv(source_log, output):
+    list1 = {}
+    list2 = []
+    with open(source_log) as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            convert_str_to_datetime(row['Last Changed'])
+            if list1.get(row['Email']):
+                #compare
+                oldrec = list1[row['Email']]
+                if convert_str_to_datetime(row['Last Changed']) > oldrec['Date']:
+                    #replace
+                    list1[row['Email']] = {
+                        'Name': row['Name'],
+                        'Date': convert_str_to_datetime(row['Last Changed'])
+                    }
+            else:
+                #add
+                list1[row['Email']] = {
+                    'Name': row['Name'],
+                    'Date': convert_str_to_datetime(row['Last Changed'])
+                }
+    for mail,info in list1.items():
+        list2.append({'Name':info['Name'],'Email':mail,'Last Changed':convert_datetime_to_str(info['Date'])})
+
+    with open(output, 'w') as f:
+        writer = csv.DictWriter(f, fieldnames=list(list2[0].keys()), quoting=csv.QUOTE_NONNUMERIC)
+        writer.writeheader()
+        for d in list2:
+            writer.writerow(d)
+    pprint(list2)
+    return
+
+if __name__ == "__main__":
+    write_last_log_to_csv("mail_log.csv","out.csv")
