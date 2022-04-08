@@ -105,3 +105,68 @@ R3#
 
 Для выполнения задания можно создавать любые дополнительные функции.
 """
+from itertools import repeat
+
+import yaml
+from concurrent.futures import ThreadPoolExecutor
+import logging
+from netmiko import (
+    ConnectHandler,
+    NetmikoTimeoutException,
+    NetmikoAuthenticationException,
+)
+
+def send_show_command(dev, command):
+    output = ""
+    try:
+        with ConnectHandler(**dev) as ssh:
+            ssh.enable()
+            prompt = ssh.find_prompt()
+            output = prompt + ssh.send_command(command, strip_command=False) + "\n"
+    except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
+        print(error)
+    return output
+
+def send_command(dev, commands):
+    output = ""
+    try:
+        with ConnectHandler(**dev) as ssh:
+            ssh.enable()
+            prompt = ssh.find_prompt()
+            output = prompt + ssh.send_config_set(commands, strip_command=False) + "\n"
+    except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
+        print(error)
+    return output
+
+def send_show_command_to_devices(devices, command, filename, limit=3):
+    with ThreadPoolExecutor(max_workers=limit) as executor, open(filename, 'w') as fw:
+        ret = executor.map(send_show_command, devices, repeat(command))
+        for dev, out in zip(devices, ret):
+            fw.write(out)
+    return
+
+
+def send_command_to_devices(devices, commands_dict, filename, limit=3):
+    with ThreadPoolExecutor(max_workers=limit) as executor, open(filename, 'w') as fw:
+        ret = executor.map(send_command, devices, repeat(commands_dict))
+        for dev, out in zip(devices, ret):
+            fw.write(out)
+    return
+
+
+def send_commands_to_devices(devices, filename, *, show=None, config=None, limit=3):
+    if show and config:
+        raise ValueError
+    elif show:
+        send_show_command_to_devices(devices, show, filename, limit)
+    elif config:
+        send_command_to_devices(devices, config, filename, limit)
+    return
+
+
+if __name__ == "__main__":
+    with open("devices.yaml") as f:
+        devices = yaml.safe_load(f)
+    commands = 'no router ospf 55'
+    send_commands_to_devices(devices, 'result.txt', config=commands)
+

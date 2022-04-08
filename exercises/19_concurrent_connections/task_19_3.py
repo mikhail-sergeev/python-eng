@@ -39,6 +39,14 @@ router ospf 1
 
 Проверить работу функции на устройствах из файла devices.yaml и словаре commands
 """
+import yaml
+from concurrent.futures import ThreadPoolExecutor
+import logging
+from netmiko import (
+    ConnectHandler,
+    NetmikoTimeoutException,
+    NetmikoAuthenticationException,
+)
 
 # Этот словарь нужен только для проверки работа кода, в нем можно менять IP-адреса
 # тест берет адреса из файла devices.yaml
@@ -47,3 +55,29 @@ commands = {
     "192.168.100.1": "sh ip int br",
     "192.168.100.2": "sh int desc",
 }
+def send_command(dev, command):
+    try:
+        with ConnectHandler(**dev) as ssh:
+            ssh.enable()
+            prompt = ssh.find_prompt()
+            output = ssh.send_command(command, strip_command=False)
+    except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
+        print(error)
+    return prompt,output
+
+def send_command_to_devices(devices, commands_dict, filename, limit=3):
+    with ThreadPoolExecutor(max_workers=limit) as executor, open(filename, 'w') as fw:
+        future_list = []
+        for device in devices:
+            future = executor.submit(send_command, device, commands_dict[device['host']])
+            future_list.append(future)
+        for f in future_list:
+            #print(f"{f.result()[0]}\n{f.result()[1]}\n")
+            fw.write(f"{f.result()[0]}{f.result()[1]}\n")
+
+    return
+
+if __name__=="__main__":
+    with open("devices.yaml") as f:
+        devices = yaml.safe_load(f)
+    send_command_to_devices(devices,commands, "cmdout.txt", 3)
