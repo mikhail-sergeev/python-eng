@@ -59,6 +59,8 @@ In [10]: t2.topology
 Out[10]: {('R1', 'Eth0/4'): ('R7', 'Eth0/0'), ('R1', 'Eth0/6'): ('R9', 'Eth0/0')}
 """
 
+from pprint import pprint
+
 topology_example = {
     ("R1", "Eth0/0"): ("SW1", "Eth0/1"),
     ("R2", "Eth0/0"): ("SW1", "Eth0/2"),
@@ -75,3 +77,27 @@ topology_example2 = {
     ("R1", "Eth0/4"): ("R7", "Eth0/0"),
     ("R1", "Eth0/6"): ("R9", "Eth0/0"),
 }
+
+class Topology:
+    def __init__(self, dict):
+        self.topology = {}
+        for port1, port2 in dict.items():
+            if not self.topology.get(port1) and not self.topology.get(port2):
+                self.topology[port1] = port2
+
+    def __add__(self, other):
+        topo1 = self.topology
+        topo2 = other.topology
+        topo_new = {}
+        topo_new.update(topo1)
+        topo_new.update(topo2)
+        return Topology(topo_new)
+
+
+if __name__ == "__main__":
+    t1 = Topology(topology_example)
+    t2 = Topology(topology_example2)
+    pprint(t1.topology)
+    t3 = t1+t2
+    pprint(t1.topology)
+

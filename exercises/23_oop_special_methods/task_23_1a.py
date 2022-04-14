@@ -31,3 +31,39 @@ In [12]: print(ip_list)
 [IPAddress('10.1.1.1/24')]
 
 """
+from pprint import pprint
+
+
+class IPAddress:
+    def __init__(self, ipaddr):
+        err = ""
+        try:
+            self.ip = ipaddr.split('/')[0]
+            ipbits = self.ip.split('.')
+            if not len(ipbits) == 4:
+                err = "Incorrect IP"
+            for bit in ipbits:
+                if int(bit) not in range(0,255):
+                    err = "Incorrect IP"
+        except (IndentationError, ValueError):
+            err = "Incorrect IP"
+        try:
+            self.mask = int(ipaddr.split('/')[1])
+            if self.mask not in range(8,32):
+                err = "Incorrect mask"
+        except (IndentationError, ValueError):
+            err = "Incorrect mask"
+        if err:
+            raise ValueError(err)
+
+    def __str__(self):
+        return f"IP address {self.ip}/{self.mask}"
+
+    def __repr__(self):
+        return f"IPAddress('{self.ip}/{self.mask}')"
+
+if __name__ == "__main__":
+    a = IPAddress('10.10.1.12/25')
+    print(a)
+
+
