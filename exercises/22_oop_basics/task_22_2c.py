@@ -63,3 +63,82 @@ ValueError                                Traceback (most recent call last)
 ValueError: При выполнении команды "logging 0255.255.1" на устройстве 192.168.100.1 возникла ошибка -> Invalid input detected at '^' marker.
 
 """
+import telnetlib
+import time
+from pprint import pprint
+
+from textfsm import clitable
+
+class CiscoTelnet:
+    def __init__(self, ip, username, password, secret):
+        self.telnet = telnetlib.Telnet(ip)
+        self.telnet.read_until(b"Username")
+        self._write_line(username)
+        self.telnet.read_until(b"Password")
+        self._write_line(password)
+        index, m, output = self.telnet.expect([b">", b"#"])
+        if index == 0:
+            self.telnet.write(b"enable\n")
+            self.telnet.read_until(b"Password")
+            self._write_line(secret)
+            self.telnet.read_until(b"#", timeout=5)
+        self._write_line("terminal length 0")
+        self.telnet.read_until(b"#", timeout=5)
+        time.sleep(3)
+        self.telnet.read_very_eager()
+
+    def _write_line(self, line):
+        self.telnet.write(line.encode("utf-8") + b"\n")
+        return
+
+    def send_show_command(self, command, parse=True, templates="templates", index="index"):
+        self._write_line(command)
+        output = self.telnet.read_until(b"#", timeout=5).decode("utf-8")
+        result = output.replace("\r\n", "\n")
+        if parse:
+            cli_table = clitable.CliTable(index, templates)
+            cli_table.ParseCmd(result, {'Command': command, 'Vendor': 'cisco_ios'})
+            data_rows = [list(row) for row in cli_table]
+            header = list(cli_table.header)
+            result = []
+            for data in data_rows:
+                item0 = zip(header, data)
+                item = dict(item0)
+                result.append(item)
+        return result
+
+    def send_config_commands(self, commands, strict=True):
+        command_list = []
+        result = []
+        if type(commands) is str:
+            command_list = [commands]
+        else:
+            command_list = commands
+        self._write_line("conf t")
+        result.append(self.telnet.read_until(b"(config)#", timeout=5).decode("utf-8"))
+        for command in command_list:
+            self._write_line(command)
+            ans = self.telnet.read_until(b"#", timeout=5).decode("utf-8")
+            result.append(ans)
+            if "%" in ans:
+                err0 = ans.split('%')[1].split('\n')[0]
+                err = f"При выполнении команды \"{command}\" на устройстве {self.telnet.host} возникла ошибка -> {err0}"
+                if strict:
+                    raise ValueError(err)
+                else:
+                    print(err)
+        self._write_line("end")
+        result.append(self.telnet.read_until(b"#", timeout=5).decode("utf-8"))
+        return "".join(result)
+
+
+r1_params = {
+    'ip': '192.168.100.1',
+    'username': 'cisco',
+    'password': 'cisco',
+    'secret': 'cisco'
+}
+
+if __name__ == "__main__":
+    r1 = CiscoTelnet(**r1_params)
+    pprint(r1.send_config_commands("logging",True))

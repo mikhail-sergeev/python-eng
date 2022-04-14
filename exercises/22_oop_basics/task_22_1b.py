@@ -52,6 +52,35 @@ In [13]: t.delete_link(('R5', 'Eth0/0'), ('R3', 'Eth0/2'))
 
 """
 
+
+
+
+from pprint import pprint
+
+class Topology:
+    def __init__(self, topology_dict):
+        self.topology = self._normalize(topology_dict)
+
+    def _normalize(self, topology_dict):
+        result = {}
+        for port1, port2 in topology_dict.items():
+            if not result.get(port1) and not result.get(port2):
+                result[port1] = port2
+        return result
+
+    def delete_link(self, port1, port2):
+        success = False
+        if self.topology.get(port1) and self.topology.get(port1) == port2:
+            success = True
+            self.topology.pop(port1)
+        if self.topology.get(port2) and self.topology.get(port2) == port1:
+            success = True
+            self.topology.pop(port2)
+        if not success:
+            print("Такого соединения нет")
+        return
+
+
 topology_example = {
     ("R1", "Eth0/0"): ("SW1", "Eth0/1"),
     ("R2", "Eth0/0"): ("SW1", "Eth0/2"),
@@ -63,3 +92,10 @@ topology_example = {
     ("SW1", "Eth0/2"): ("R2", "Eth0/0"),
     ("SW1", "Eth0/3"): ("R3", "Eth0/0"),
 }
+
+
+if __name__ == "__main__":
+    top = Topology(topology_example)
+    pprint(top.topology)
+    top.delete_link(('R5', 'Eth0/0'), ('R3', 'Eth0/2'))
+    pprint(top.topology)

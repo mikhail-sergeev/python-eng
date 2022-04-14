@@ -32,6 +32,7 @@ Out[3]:
  ('R3', 'Eth0/2'): ('R5', 'Eth0/0')}
 
 """
+from pprint import pprint
 
 topology_example = {
     ("R1", "Eth0/0"): ("SW1", "Eth0/1"),
@@ -44,3 +45,16 @@ topology_example = {
     ("SW1", "Eth0/2"): ("R2", "Eth0/0"),
     ("SW1", "Eth0/3"): ("R3", "Eth0/0"),
 }
+
+
+class Topology:
+    def __init__(self, dict):
+        self.topology = {}
+        for port1, port2 in dict.items():
+            if not self.topology.get(port1) and not self.topology.get(port2):
+                self.topology[port1] = port2
+
+
+if __name__ == "__main__":
+    top = Topology(topology_example)
+    pprint(top.topology)
